@@ -56,19 +56,19 @@ const store = async function (req, res, next) {
         const image = new Image();
         image.path = "http://placeimg.com/640/480/nature";
         await image.save();
-    
+
         const newArticle = new Article(article);
         newArticle.comments = [];
         newArticle.image = image._id;
         await newArticle.save();
-    
+
         const createdArticle = await Article.findById(newArticle._id)
                                             .populate('tags')
                                             .populate('category')
                                             .populate('author')
                                             .populate('image')
                                             .exec();
-        
+
             res.status(200).json(createdArticle);
     }
     catch(error) {
@@ -102,7 +102,7 @@ const update = async function(req, res, next) {
                                          .populate('author')
                                          .populate('image')
                                          .exec();
-        
+
             res.status(200).json(upDatedArticle);
         }
     }
@@ -127,7 +127,7 @@ const remove = async function(req, res, next) {
         }
         else {
             await article.remove();
-        
+
             res.status(204).json(null);
         }
     }

@@ -13,7 +13,7 @@ const Login = () => {
     let history = useHistory();
 
     const initialState = {
-        username: "Bruce16",
+        username: "Lula_Graham",
         password: "secret",
         remember: false,
         isSubmitting: false,
@@ -99,31 +99,31 @@ const Login = () => {
                     }
                     <Form.Group controlId="username">
                         <Form.Label>Username</Form.Label>
-                        <Form.Control 
-                            required 
+                        <Form.Control
+                            required
                             name="username"
-                            type="username" 
+                            type="username"
                             value={state.username}
-                            onChange={handleChange} 
+                            onChange={handleChange}
                         />
                     </Form.Group>
                     <Form.Group controlId="password">
                         <Form.Label>Password</Form.Label>
-                        <Form.Control 
+                        <Form.Control
                             required
                             name="password"
-                            type="password" 
+                            type="password"
                             value={state.password}
                             onChange={handleChange}
                         />
                     </Form.Group>
                     <Form.Group controlId="remember">
                         <Form.Check
-                            type="checkbox" 
-                            name="remember" 
-                            label="Remember me" 
+                            type="checkbox"
+                            name="remember"
+                            label="Remember me"
                             checked={state.remember}
-                            onChange={handleChange} 
+                            onChange={handleChange}
                         />
                     </Form.Group>
                     <Button variant="primary" type="submit" disabled={state.isSubmitting}>
@@ -132,7 +132,7 @@ const Login = () => {
                 </Form>
             </Card.Body>
         </Card>
-    );  
+    );
 }
 
 export default Login;

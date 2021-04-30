@@ -7,6 +7,7 @@ import Show from './articles/Show';
 import Edit from './articles/Edit';
 import Create from './articles/Create';
 
+
 const ArticlesContext = React.createContext();
 
 const initialState = {
@@ -112,7 +113,7 @@ const Home = () => {
     if (!authContext.state.isAuthenticated) {
         return <Redirect to="/login" />
     }
-    
+
     return (
         <ArticlesContext.Provider value={{
             state,

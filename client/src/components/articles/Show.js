@@ -1,9 +1,17 @@
 import React from 'react';
 import { Redirect } from 'react-router-dom';
 import { Link, useParams, useRouteMatch } from 'react-router-dom';
+import { BrowserRouter } from 'react-router-dom';
 import { Nav, Navbar } from 'react-bootstrap';
 import { AuthContext } from '../../App';
 import DeleteModal from './DeleteModal';
+import EditCommentModal from './comments/EditCommentModal';
+import DeleteCommentModal from './comments/DeleteCommentModal';
+import Create from '../articles/Create';
+import { useHistory } from 'react-router-dom';
+import { useFetch } from '../../hooks/useFetch';
+import { Form, Button, Alert, Container, Row, Col } from 'react-bootstrap';
+
 
 const initialState = {
     article: null,
@@ -35,6 +43,56 @@ const reducer = (state, action) => {
                 hasError: true
             };
         }
+        case "POST_COMMENT_REQUEST": {
+            return {
+                ...state,
+                isPosting: true,
+                errorMessage: null
+            };
+        }
+        case "POST_COMMENT_SUCCESS": {
+          const article = state.article;
+          const comment = action.payload;
+          if(!article.comments.some(c => comment._id === c._id)){
+            article.comments.push(comment);
+          }
+            return {
+                ...state,
+                isPosting: false,
+
+            };
+        }
+        case "POST_COMMENT_FAILURE": {
+            return {
+                ...state,
+                isPosting: false,
+                errorMessage: action.payload
+            };
+        }
+        case "COMMENT_UPDATED": {
+          const article = state.article;
+          const comment = action.payload;
+          const index = article.comments.findIndex(c => comment._id === c._id);
+          if(index !== -1){
+            article.comments.splice(index, 1, comment);
+          }
+          return{
+            ...state
+          };
+        }
+
+        case "COMMENT_DELETED": {
+          const article = state.article;
+          const comment = action.payload;
+          const index = article.comments.findIndex(c => comment._id === c._id);
+          if (index !== -1){
+            article.comments.splice(index,1);
+          }
+          return{
+            ...state,
+        };
+      }
+
         default: {
             return state;
         }
@@ -47,6 +105,58 @@ const Show = () => {
     const authContext = React.useContext(AuthContext);
 
     const [state, dispatch] = React.useReducer(reducer, initialState);
+
+    const new_comment = React.useRef();
+
+    const handleSubmit = (e) => {
+      e.preventDefault();
+
+      dispatch({
+        type: "POST_COMMENT_REQUEST"
+      });
+
+      const comment = {
+        body: new_comment.current.value
+      };
+
+      fetch(`http://localhost:8000/articles/` + id +  `/comments`, {
+        method: 'POST',
+        headers:{
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': `Bearer ${authContext.state.token}`
+        },
+        body: JSON.stringify(comment)
+      })
+      .then(res => res.json())
+      .then(response => {
+        new_comment.current.value = "";
+        dispatch({
+          type: "POST_COMMENT_SUCCESS",
+          payload: response
+        });
+      })
+      .catch(error =>{
+        dispatch({
+          action: "POST_COMMENT_FAILURE",
+          payload:error.message || error.statusText
+        });
+      });
+    };
+
+    const onCommentUpdated = (comment) => {
+      dispatch({
+        type: "COMMENT_UPDATED",
+        payload: comment
+      });
+    };
+    const onCommentDeleted = (comment) => {
+        dispatch({
+          type: "COMMENT_DELETED",
+          payload: comment
+        });
+      };
+
 
     React.useEffect(() => {
         dispatch({
@@ -82,7 +192,7 @@ const Show = () => {
     if (!authContext.state.isAuthenticated) {
         return <Redirect to="/login" />
     }
-    
+
     return (
         <>
             {article !== null &&
@@ -93,9 +203,9 @@ const Show = () => {
                     {article.author._id === authContext.state.user._id &&
                     <Navbar className="float-right">
                         <Nav.Item className="mr-2">
-                            <Nav.Link 
-                                className="btn btn-outline-warning" 
-                                as={Link} 
+                            <Nav.Link
+                                className="btn btn-outline-warning"
+                                as={Link}
                                 to={`${url}/edit`}
                             >
                                 Edit
@@ -129,6 +239,8 @@ const Show = () => {
                                 <th>Author</th>
                                 <th>Comment</th>
                                 <th>Date</th>
+                                <th>Actions</th>
+
                             </tr>
                         </thead>
                         <tbody>
@@ -137,16 +249,45 @@ const Show = () => {
                                     <td>{comment.author.username}</td>
                                     <td>{comment.body}</td>
                                     <td>{comment.updatedAt}</td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </>
-                }
-            </>
-            }
+                                    <td>
+                                    {authContext.state.user._id === comment.author._id &&
+                                      <>
+                                      <EditCommentModal article={article} comment={comment} onCommentUpdated={onCommentUpdated}/>
+                                      <DeleteCommentModal article={article} comment={comment} onCommentDeleted={onCommentDeleted}/>
+                                      </>
+                                    }
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+</>
+}
+<Form onSubmit={handleSubmit}>
+  {state.errorMessage &&
+    <Alert variant="danger">
+    {state.errorMessage}
+    </Alert>
+  }
+  <Form.Group controlId="comment">
+    <Form.Label>Comment</Form.Label>
+    <Form.Control
+        required
+        name="comment"
+        type="text"
+        ref={new_comment}
+      />
+    </Form.Group>
+    <Button variant="primary" type= "submit" disabled={state.isPosting}>
+    POST
+    </Button>
+    </Form>
     </>
-    );
+  }
+  </>
+);
 };
+
+
 
 export default Show;
